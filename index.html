@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buenos Humos | Grow & Smoke Shop</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM (UMD - Universal Module Definition for local file support) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                black: '#0a0a0a',
+                orange: '#FF8C00',
+                yellow: '#FFD700',
+                dark: '#121212',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              urban: ['Oswald', 'sans-serif'],
+            },
+            boxShadow: {
+              'neon-orange': '0 0 10px rgba(255, 140, 0, 0.5), 0 0 20px rgba(255, 140, 0, 0.3)',
+              'neon-yellow': '0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3)',
+            },
+            animation: {
+              'fade-in': 'fadeIn 1s ease-out forwards',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #0a0a0a;
+        color: white;
+        scroll-behavior: smooth;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0a0a0a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #FF8C00;
+      }
+      .neon-text {
+        text-shadow: 0 0 5px rgba(255, 140, 0, 0.7);
+      }
+      /* Hide scrollbar utility */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // --- ICONS (Inline SVG components to avoid external dependency issues) ---
+        const Icon = ({ path, className }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {path}
+            </svg>
+        );
+
+        const MessageCircle = (props) => <Icon {...props} path={<><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></>} />;
+        const X = (props) => <Icon {...props} path={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />;
+        const ArrowRight = (props) => <Icon {...props} path={<><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></>} />;
+        const ShoppingBag = (props) => <Icon {...props} path={<><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></>} />;
+        const Star = (props) => <Icon {...props} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />;
+        const MapPin = (props) => <Icon {...props} path={<><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>} />;
+        const Instagram = (props) => <Icon {...props} path={<><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></>} />;
+        const Facebook = (props) => <Icon {...props} path={<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>} />;
+        const ChevronLeft = (props) => <Icon {...props} path={<path d="m15 18-6-6 6-6"/>} />;
+        const ChevronRight = (props) => <Icon {...props} path={<path d="m9 18 6-6-6-6"/>} />;
+
+        // --- CONSTANTS ---
+        const WHATSAPP_LINK = "https://wa.link/t784j5";
+
+        const ASSETS = {
+            logo: "https://i.postimg.cc/R01mzQh7/1770022044118.png",
+            heroVideo: "https://scontent.fclo2-2.fna.fbcdn.net/o1/v/t2/f2/m412/AQOlNSfkqTwKOGaq489zPUSSP-OeQ4yjfi49nGZmYLSRKVFLYG0a1y5wwx3y97XfbT4AwUyZ2r5uXFL47KWRbYGn.mp4?_nc_cat=101&_nc_oc=Adn-Dzy7J0ptONV3wQ5ocw4nbyuzazAJfIqMgoSdBxwodDEFNqhYnDPvZIZHG9Mqovs&_nc_sid=8bf8fe&_nc_ht=scontent.fclo2-2.fna.fbcdn.net&_nc_ohc=rbU6aYeY47cQ7kNvwGbA_lq&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTAwNTM4MzMyMDg1MTYzMywiYXNzZXRfYWdlX2RheXMiOjU4MiwidmlfdXNlY2FzZV9pZCI6MTAxMjAsImR1cmF0aW9uX3MiOjI1LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=8WqzORcKq9kmpXdIQ2Riqg&_nc_zt=28&_nc_eui2=AeF6rhuV1TXkma_Yr804s3yDXVg1-nUfa2tdWDX6dR9ra0u6kNRxov4x5I_E3ks6HolJPu8-oU1RSdtkiy-5eLJd&oh=00_AfsYpQfmkPcQ2w4aeEMfI6Hg0G1C6KdNvnHpmEmQ2-tHXg&oe=69864D5E&bitrate=339612&tag=sve_sd",
+            shopBg: "https://i.postimg.cc/R0fQcXsD/FB-IMG-1770056535251.jpg"
+        };
+
+        const CATEGORIES = [
+        {
+            id: 'vaping',
+            name: 'VAPING',
+            image: 'https://i.postimg.cc/hv7MX2qQ/FB-IMG-1770051847633.jpg',
+            description: 'Dispositivos de última generación, pods desechables y e-liquids premium para una experiencia de vapor superior.'
+        },
+        {
+            id: 'glass',
+            name: 'GLASS & BONGS',
+            image: 'https://i.postimg.cc/Nf6SbjWp/FB-IMG-1770051916182.jpg',
+            description: 'Arte en vidrio. Bongs, rigs y pipas soplados a mano con diseños exclusivos y filtrado óptimo.'
+        },
+        {
+            id: 'accessories',
+            name: 'ACCESORIOS / KITS',
+            image: 'https://i.postimg.cc/DwfjgdQ7/FB-IMG-1770051965198.jpg',
+            description: 'Desde grinders de precisión hasta papel de alta gama. Todo lo que necesitas para tu ritual completo.'
+        },
+        {
+            id: 'cbd',
+            name: 'CBD MEDICINAL',
+            image: 'https://i.postimg.cc/Vvc4bjsB/FB-IMG-1770051976960.jpg',
+            description: 'Bienestar natural. Aceites, gomas y tópicos de CBD certificados para tu salud y relajación.'
+        },
+        {
+            id: 'merch',
+            name: 'MERCH',
+            image: 'https://i.postimg.cc/7PMnWJZk/FB-IMG-1770052150136.jpg',
+            description: 'Estilo urbano. Camisetas, gorras y hoodies con el sello inconfundible de Buenos Humos.'
+        },
+        {
+            id: 'grow',
+            name: 'AUTOCULTIVO',
+            image: 'https://i.postimg.cc/W1QZ3s1f/FB-IMG-1770052242463.jpg',
+            description: 'Sustratos, fertilizantes, luces y carpas. Asesoría experta para que cultives tus propios frutos.'
+        }
+        ];
+
+        const PRODUCTS = [
+        {
+            id: 'carta-v2',
+            name: 'Carta V2 Focus V',
+            price: 2200000,
+            oldPrice: 2800000,
+            image: 'https://i.postimg.cc/fbQbpKCD/FB-IMG-1770054197715.jpg',
+            tag: 'Top Luxury'
+        },
+        {
+            id: 'cojines',
+            name: 'Cojines Buenos Humos',
+            price: 85000,
+            image: 'https://i.postimg.cc/QNvVch7k/FB-IMG-1770054374618.jpg',
+            tag: 'Más vendido'
+        },
+        {
+            id: 'bandejas',
+            name: 'Bandejas de Rolado',
+            price: 45000,
+            image: 'https://i.postimg.cc/6qVs7rRd/FB-IMG-1770054477642.jpg',
+            tag: 'Más vendido'
+        },
+        {
+            id: 'vaso-bong',
+            name: 'Vaso Bong Premium',
+            price: 120000,
+            image: 'https://i.postimg.cc/wTFPSTkt/FB-IMG-1770054556141.jpg',
+            tag: 'NEW'
+        },
+        {
+            id: 'articulos-tabaco',
+            name: 'Artículos para Tabaco',
+            price: 35000,
+            image: 'https://http2.mlstatic.com/D_NQ_NP_731099-MCO86689505417_062025-O.webp',
+            tag: 'Esenciales'
+        }
+        ];
+
+        const LOCATIONS = [
+        {
+            name: 'Sede Norte - Colón Plaza',
+            address: 'Centro Comercial Colón Plaza, Cali, Colombia',
+            mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.571478148332!2d-76.5050854852485!3d3.453678597489566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e30a7b4588972a9%3A0x6331d23631557026!2sCentro%20Comercial%20Colon%20Plaza!5e0!3m2!1sen!2sco!4v1708892914101!5m2!1sen!2sco'
+        },
+        {
+            name: 'Sede Sur - Meléndez',
+            address: 'Meléndez, Cali, Valle del Cauca, Colombia',
+            mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.918933458692!2d-76.5511!3d3.3765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e30a17b0754826b%3A0xc304014902633857!2sMelendez%2C%20Cali%2C%20Valle%20del%20Cauca!5e0!3m2!1sen!2sco!4v1708892987102!5m2!1sen!2sco'
+        }
+        ];
+
+        // --- COMPONENTS ---
+
+        const Hero = () => {
+          return (
+            <section className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-black z-10">
+              <div className="absolute inset-0 z-0">
+                <div className="absolute inset-0 bg-black/60 z-10"></div>
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                >
+                  <source src={ASSETS.heroVideo} type="video/mp4" />
+                </video>
+              </div>
+
+              <div className="relative z-20 flex flex-col items-center text-center px-4 max-w-4xl mx-auto animate-fade-in">
+                <img 
+                  src={ASSETS.logo} 
+                  alt="Buenos Humos Logo" 
+                  className="w-48 md:w-64 mb-8 drop-shadow-[0_0_20px_rgba(255,140,0,0.4)]"
+                />
+                
+                <h1 className="text-5xl md:text-7xl font-urban font-bold uppercase tracking-wider mb-6 text-white drop-shadow-lg">
+                  Lleva tu viaje <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-brand-yellow neon-text">
+                    a otro nivel
+                  </span>
+                </h1>
+
+                <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl font-light">
+                  La experiencia más premium de Cali. Vapes, Glass, CBD y Cultivo en un solo lugar.
+                </p>
+
+                <a 
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-brand-black transition-all duration-200 bg-gradient-to-r from-brand-orange to-brand-yellow rounded-full focus:outline-none hover:shadow-neon-orange hover:scale-105"
+                >
+                  <MessageCircle className="w-6 h-6 mr-2 group-hover:rotate-12 transition-transform" />
+                  HABLAR CON UN EXPERTO
+                </a>
+              </div>
+              
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-20 opacity-70">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
+            </section>
+          );
+        };
+
+        const Categories = () => {
+          const [selectedCategory, setSelectedCategory] = useState(null);
+
+          const handleImageError = (e) => {
+            e.currentTarget.src = `https://placehold.co/800x800/121212/FF8C00?text=Buenos+Humos`;
+          };
+
+          return (
+            <section className="py-20 px-4" id="categorias">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-urban font-bold text-center mb-16 text-white drop-shadow-md">
+                  CATEGORÍAS <span className="text-brand-orange">PREMIUM</span>
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {CATEGORIES.map((cat) => (
+                    <div 
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat)}
+                      className="group relative h-80 rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-brand-orange transition-all duration-300 hover:shadow-neon-orange bg-black/40 backdrop-blur-sm"
+                    >
+                      <img 
+                        src={cat.image} 
+                        alt={cat.name}
+                        onError={handleImageError}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                      />
+                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/50 to-transparent opacity-90 group-hover:opacity-70 transition-opacity duration-300" />
+
+                      <div className="absolute bottom-0 left-0 p-6 w-full">
+                        <h3 className="text-2xl font-urban font-bold text-white mb-2 group-hover:text-brand-yellow transition-colors flex items-center justify-between">
+                          {cat.name}
+                          <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
+                        </h3>
+                        <div className="h-1 w-12 bg-brand-orange rounded group-hover:w-full transition-all duration-300" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {selectedCategory && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div 
+                    className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                    onClick={() => setSelectedCategory(null)}
+                  ></div>
+                  
+                  <div className="relative w-full max-w-2xl bg-brand-dark border border-brand-orange/30 rounded-2xl shadow-neon-orange overflow-hidden animate-fade-in">
+                    <button 
+                      onClick={() => setSelectedCategory(null)}
+                      className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-white hover:text-brand-orange transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+                      <div className="h-64 md:h-auto relative">
+                        <img 
+                          src={selectedCategory.image} 
+                          alt={selectedCategory.name}
+                          onError={handleImageError}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-brand-dark md:hidden" />
+                      </div>
+                      
+                      <div className="p-8 flex flex-col justify-center bg-brand-dark">
+                        <h3 className="text-3xl font-urban font-bold text-brand-yellow mb-4">
+                          {selectedCategory.name}
+                        </h3>
+                        <p className="text-gray-300 mb-8 leading-relaxed">
+                          {selectedCategory.description}
+                        </p>
+                        <a 
+                          href={`${WHATSAPP_LINK}?text=Hola,%20me%20interesa%20saber%20más%20sobre%20${selectedCategory.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block text-center w-full py-3 px-6 bg-brand-orange text-brand-black font-bold rounded-lg hover:bg-brand-yellow hover:shadow-neon-yellow transition-all duration-300"
+                        >
+                          VER CATÁLOGO
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        };
+
+        const VideoSection = () => {
+          return (
+            <section className="py-20 flex flex-col items-center">
+              <div className="max-w-7xl mx-auto px-4 w-full">
+                <h2 className="text-4xl md:text-5xl font-urban font-bold text-center mb-12 text-white">
+                  NUESTRA <span className="text-brand-orange">ATMÓSFERA</span>
+                </h2>
+                
+                <div className="flex justify-center">
+                  <div className="relative w-full max-w-[381px] rounded-3xl overflow-hidden border-4 border-brand-orange/20 shadow-neon-orange bg-black">
+                    <div style={{ padding: '177.78% 0 0 0', position: 'relative' }}>
+                      <iframe 
+                        src="https://player.vimeo.com/video/1161178386?badge=0&autopause=0&player_id=0&app_id=58479" 
+                        frameBorder="0" 
+                        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" 
+                        referrerPolicy="strict-origin-when-cross-origin" 
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} 
+                        title="bh tienda video"
+                      ></iframe>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-8 text-center text-gray-300 font-urban uppercase tracking-widest text-sm italic opacity-80 drop-shadow-md">
+                  📍 Siente el flow en nuestras sedes de Cali
+                </p>
+              </div>
+            </section>
+          );
+        };
+
+        const HotList = () => {
+          const scrollContainerRef = useRef(null);
+
+          const handleImageError = (e) => {
+            e.currentTarget.src = `https://placehold.co/600x600/121212/FF8C00?text=Producto`;
+          };
+
+          const formatPrice = (price) => {
+            return new Intl.NumberFormat('es-CO', {
+              style: 'currency',
+              currency: 'COP',
+              minimumFractionDigits: 0
+            }).format(price);
+          };
+
+          const scroll = (direction) => {
+            if (scrollContainerRef.current) {
+              const container = scrollContainerRef.current;
+              const scrollAmount = 320; 
+              const newScrollPosition = direction === 'left' 
+                ? container.scrollLeft - scrollAmount 
+                : container.scrollLeft + scrollAmount;
+              
+              container.scrollTo({
+                left: newScrollPosition,
+                behavior: 'smooth'
+              });
+            }
+          };
+
+          return (
+            <section className="py-20 px-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-orange via-brand-yellow to-brand-orange opacity-50" />
+              <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-brand-yellow/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="max-w-[1400px] mx-auto relative z-10">
+                <div className="flex flex-col items-center mb-16">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="text-brand-yellow fill-brand-yellow w-5 h-5" />
+                    <span className="text-brand-yellow font-bold tracking-widest text-sm drop-shadow-md">SELECCIÓN DEL MES</span>
+                    <Star className="text-brand-yellow fill-brand-yellow w-5 h-5" />
+                  </div>
+                  <h2 className="text-4xl md:text-6xl font-urban font-bold text-white uppercase italic drop-shadow-lg text-center">
+                    The Hot List
+                  </h2>
+                </div>
+
+                <div className="relative group/slider">
+                  <button 
+                    onClick={() => scroll('left')}
+                    className="absolute -left-2 md:-left-12 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-brand-orange text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover/slider:opacity-100 disabled:opacity-0 shadow-neon-orange hidden md:block"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft className="w-8 h-8" />
+                  </button>
+
+                  <button 
+                    onClick={() => scroll('right')}
+                    className="absolute -right-2 md:-right-12 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-brand-orange text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover/slider:opacity-100 shadow-neon-orange hidden md:block"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight className="w-8 h-8" />
+                  </button>
+
+                  <div 
+                    ref={scrollContainerRef}
+                    className="flex gap-6 overflow-x-auto pb-12 pt-4 px-4 snap-x snap-mandatory hide-scrollbar"
+                    style={{ 
+                      scrollbarWidth: 'none', 
+                      msOverflowStyle: 'none',
+                      WebkitOverflowScrolling: 'touch'
+                    }}
+                  >
+                    {PRODUCTS.map((product) => (
+                      <div 
+                        key={product.id}
+                        className="min-w-[280px] md:min-w-[320px] snap-center group bg-brand-dark/80 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden hover:border-brand-orange/50 transition-all duration-300 hover:shadow-neon-orange flex flex-col"
+                      >
+                        <div className="relative aspect-square overflow-hidden bg-white/5">
+                          {product.tag && (
+                            <span className={`absolute top-4 left-4 z-10 px-3 py-1 text-xs font-bold rounded-full shadow-md ${
+                              product.tag === 'SALE' ? 'bg-red-600 text-white' : 
+                              product.tag === 'NEW' ? 'bg-blue-600 text-white' : 
+                              'bg-brand-orange text-black'
+                            }`}>
+                              {product.tag}
+                            </span>
+                          )}
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            onError={handleImageError}
+                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+
+                        <div className="p-6 flex flex-col flex-grow">
+                          <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem]">
+                            {product.name}
+                          </h3>
+                          
+                          <div className="mt-auto">
+                            <div className="flex items-end gap-3 mb-4">
+                              <span className="text-2xl font-bold text-brand-yellow">
+                                {formatPrice(product.price)}
+                              </span>
+                              {product.oldPrice && (
+                                <span className="text-sm text-gray-500 line-through mb-1">
+                                  {formatPrice(product.oldPrice)}
+                                </span>
+                              )}
+                            </div>
+
+                            <a 
+                              href={`${WHATSAPP_LINK}?text=Hola,%20quiero%20comprar%20${product.name}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-brand-orange hover:text-black text-white font-bold rounded-lg transition-all duration-300"
+                            >
+                              <ShoppingBag className="w-4 h-4 mr-2" />
+                              LO QUIERO
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="md:hidden text-center text-gray-500 text-sm animate-pulse mt-[-20px] mb-4">
+                    ← Desliza para ver más →
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const Locations = () => {
+          return (
+            <section className="py-20 px-4 border-t border-white/5">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-urban font-bold text-center mb-16 text-white drop-shadow-md">
+                  NUESTRAS <span className="text-brand-orange">SEDES</span>
+                </h2>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                  {LOCATIONS.map((loc, idx) => (
+                    <div key={idx} className="bg-brand-dark/80 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-lg">
+                      <div className="flex items-center gap-3 mb-4 px-2">
+                        <MapPin className="text-brand-orange w-6 h-6" />
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{loc.name}</h3>
+                          <p className="text-sm text-gray-400">{loc.address}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="w-full aspect-video rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 border border-white/10">
+                        <iframe
+                          src={loc.mapUrl}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title={`Mapa ${loc.name}`}
+                        ></iframe>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const Footer = () => {
+          return (
+            <footer className="bg-black pt-16 pb-8 border-t border-brand-orange/20">
+              <div className="max-w-7xl mx-auto px-4 flex flex-col items-center text-center">
+                
+                <div className="flex gap-8 mb-10">
+                  <a href="#" className="text-white hover:text-brand-orange hover:scale-110 transition-all">
+                    <Instagram className="w-8 h-8" />
+                  </a>
+                  <a href="#" className="text-white hover:text-brand-orange hover:scale-110 transition-all">
+                    <Facebook className="w-8 h-8" />
+                  </a>
+                </div>
+
+                <div className="max-w-3xl mb-10 p-6 border border-white/10 rounded-lg bg-white/5">
+                  <h4 className="text-brand-yellow font-bold mb-2 uppercase text-sm tracking-widest">
+                    Aviso Legal
+                  </h4>
+                  <p className="text-gray-400 text-xs leading-relaxed uppercase">
+                    El consumo de tabaco o nicotina es perjudicial para la salud. 
+                    Prohibida la venta a menores de edad. Los productos que contienen CBD no son medicamentos 
+                    y no están destinados a diagnosticar, tratar, curar o prevenir ninguna enfermedad.
+                    El autocultivo se rige por la legislación colombiana vigente.
+                  </p>
+                </div>
+
+                <div className="text-gray-600 text-sm">
+                  &copy; {new Date().getFullYear()} Buenos Humos. Todos los derechos reservados.
+                  <br />
+                  <span className="text-xs mt-2 block">Diseñado con flow en Cali, Ve.</span>
+                </div>
+              </div>
+            </footer>
+          );
+        };
+
+        const App = () => {
+          return (
+            <div className="min-h-screen bg-brand-black text-white font-sans selection:bg-brand-orange selection:text-black">
+              <Hero />
+              
+              <div className="relative">
+                <div className="absolute inset-0 z-0">
+                    <img 
+                      src={ASSETS.shopBg} 
+                      alt="" 
+                      className="w-full h-full object-cover fixed top-0 left-0"
+                      style={{ height: '100vh', position: 'fixed', zIndex: -1 }} 
+                    />
+                    <div className="absolute inset-0 bg-black/85 z-0 backdrop-blur-[2px]" style={{ height: '100%', position: 'absolute' }}></div>
+                </div>
+
+                <div className="relative z-10">
+                  <Categories />
+                  <VideoSection />
+                  <HotList />
+                  <Locations />
+                  <Footer />
+                </div>
+              </div>
+
+              <a 
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.5)] hover:scale-110 transition-transform hover:shadow-[0_0_30px_rgba(37,211,102,0.8)] animate-pulse-slow flex items-center justify-center"
+                aria-label="Contactar por WhatsApp"
+              >
+                <MessageCircle className="w-8 h-8 fill-current" />
+              </a>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
